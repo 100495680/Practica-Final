@@ -35,26 +35,20 @@ class client :
             print(status_dict['0'])
             print(sock.recv(2048)[0])
         else:
-            print(status_dict[str(response[0])])
+            print(status_dict[str(response)])
         sock.close()
 
     @staticmethod
     def tratar_mensaje(message, status_dict):
         '''
-        La intención de esta función es unificar el mandado de mensajes como en algunas peticiones se mandará más de un argumento y no podríamos encontrar una estandarización
-        mandandolo todo como un string. Lo que haremos es aprovechar python y mandar un string o lista de forma que si es una lista mandará más de un mensaje al sock.
+        La intención de esta función es unificar el mandado de mensajes como primer argumento siempre se mandará el usuario aún siendo erroneo ya que el 
+        mirar si el usuario existe o no, no es competencia del cliente pero el tener el usuario que eres si es la competencia.
         '''
-        if isinstance(message, list):
-            for mensaje in message
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                server_address = (client._server, client._port)
-                sock.connect(server_address)
-                sock.sendall(mensaje)
-        else:
+        for parametro in message:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server_address = (client._server, client._port)
             sock.connect(server_address)
-            sock.sendall(mensaje)
+            sock.sendall(parametro)
         listener_thread = threading.Thread(target=client.tratar_respuesta, args=(sock, status_dict,))
         listener_thread.start()
         listener_thread.join()
@@ -68,7 +62,7 @@ class client :
             '2' : 'REGISTER FAIL'
         }
 
-        client.tratar_mensaje(user.encode(),status_dict)
+        client.tratar_mensaje([b'0',user.encode()],status_dict)
         return client.RC.ERROR
 
    
@@ -81,7 +75,7 @@ class client :
             '2' : 'UNREGISTER FAIL'
         }
 
-        client.tratar_mensaje(user.encode(),status_dict)
+        client.tratar_mensaje([b'1',user.encode()],status_dict)
         return client.RC.ERROR
 
 
@@ -95,8 +89,8 @@ class client :
             '2' : 'USER ALREADY CONNECTED',
             '3' : 'CONNECT FAIL'
         }
-
-        client.tratar_mensaje(user.encode(),status_dict)
+        client.user = user
+        client.tratar_mensaje([b'2',user.encode()],status_dict)
         return client.RC.ERROR
 
 
@@ -110,8 +104,8 @@ class client :
             '2' : 'DISCONNECT FAIL, USER NOT CONNECTED',
             '3' : 'DISCONNECT FAIL'
         }
-
-        client.tratar_mensaje(user.encode(),status_dict)
+        client.user = 0
+        client.tratar_mensaje([b'3',user.encode()],status_dict)
         return client.RC.ERROR
 
     @staticmethod
@@ -125,7 +119,7 @@ class client :
             '4' : 'PUBLISH FAIL'
         }
 
-        client.tratar_mensaje(user.encode(),status_dict)
+        client.tratar_mensaje([b'4', client.user, fileName.encode(), description.encode()],status_dict)
         return client.RC.ERROR
 
     @staticmethod
@@ -139,20 +133,20 @@ class client :
             '4' : 'DELETE FAIL'
         }
 
-        client.tratar_mensaje(user.encode(),status_dict)
+        client.tratar_mensaje([b'5', client.user, fileName.encode()],status_dict)
         return client.RC.ERROR
 
     @staticmethod
     def  listusers() :
 
         status_dict = {
-            '0' : 'PUBLISH OK',
+            '0' : 'LIST_USERS OK',
             '1' : 'LIST_USERS FAIL, USER DOES NOT EXIST',
             '2' : 'LIST_USERS FAIL, USER NOT CONNECTED',
             '3' : 'LIST_USERS FAIL'
         }
-
-        client.tratar_mensaje(user.encode(),status_dict)
+    
+        client.tratar_mensaje([b'6', client.user],status_dict)
         return client.RC.ERROR
 
     @staticmethod
@@ -166,7 +160,7 @@ class client :
             '4' : 'LIST_CONTENT FAIL'
         }
 
-        client.tratar_mensaje(user.encode(),status_dict)
+        client.tratar_mensaje([b'7',user.encode()],status_dict)
         return client.RC.ERROR
 
     @staticmethod
@@ -178,7 +172,7 @@ class client :
             '2' : 'GET_FILE FAIL'
         }
 
-        client.tratar_mensaje(user.encode(),status_dict)
+        client.tratar_mensaje([b'8',user.encode(),remote_FileName.encode(), local_FileName.encode()],status_dict)
         return client.RC.ERROR
 
     # *

@@ -51,14 +51,109 @@ int recvMessage(int socket, char *buffer, int len)
 void *tratar_cliente(void *arg) {
     int sd = *(int *)arg;
     free(arg);
-    char buffer[MAX_BUFFER];
 
-    int n = recv(sd, buffer, sizeof(buffer) - 1, 0);
-    if (n > 0) {
-        buffer[n] = '\0';
-        printf("Mensaje: %s\n", buffer);
+    char user[256];
+    char fileName[256];
+    char operacion;
+    int n = recv(sd, &operacion, 1, 0);
+    printf("%c", operacion);
+    switch (operacion) {
+        case '0':
+            n = recv(sd, user, sizeof(user) - 1, 0);
+            if (n > 0) {
+                user[n] = '\0';
+            }
+            printf("OPERACION REGISTER FROM %s\n", user);
+            break;
+        case '1':
+            n = recv(sd, user, sizeof(user) - 1, 0);
+            if (n > 0) {
+                user[n] = '\0';
+            }
+            printf("OPERACION UNREGISTER FROM %s\n", user);
+            break;
+        case '2':
+            n = recv(sd, user, sizeof(user) - 1, 0);
+            if (n > 0) {
+                user[n] = '\0';
+            }
+            printf("OPERACION CONNECT FROM %s\n", user);
+            break;
+        case '3':
+            n = recv(sd, user, sizeof(user) - 1, 0);
+            if (n > 0) {
+                user[n] = '\0';
+            }
+            printf("OPERACION DISCONNECT FROM %s\n", user);
+            break;
+        case '4':
+            n = recv(sd, user, sizeof(user) - 1, 0);
+            if (n > 0) {
+                user[n] = '\0';
+            }
+            n = recv(sd, fileName, sizeof(fileName) - 1, 0);
+            if (n > 0) {
+                fileName[n] = '\0';
+            }
+            char description[256];
+            n = recv(sd, description, sizeof(description) - 1, 0);
+            if (n > 0) {
+                description[n] = '\0';
+            }
+            printf("OPERACION PUBLISH FROM %s\n", user);
+            break;
+        case '5':
+            
+            n = recv(sd, user, sizeof(user) - 1, 0);
+            if (n > 0) {
+                user[n] = '\0';
+            }
+            char fileName[256];
+            n = recv(sd, fileName, sizeof(fileName) - 1, 0);
+            if (n > 0) {
+                fileName[n] = '\0';
+            }
+            printf("OPERACION DELETE FROM %s\n", user);
+            break;
+        case '6':
+            
+            n = recv(sd, user, sizeof(user) - 1, 0);
+            if (n > 0) {
+                user[n] = '\0';
+            }
+            printf("OPERACION LIST_USERS FROM %s\n", user);        
+            break;
+        case '7':
+            
+            n = recv(sd, user, sizeof(user) - 1, 0);
+            if (n > 0) {
+                user[n] = '\0';
+            }
+            printf("OPERACION LIST_CONTENT FROM %s\n", user);
+            break;
+        case '8':
+            
+            n = recv(sd, user, sizeof(user) - 1, 0);
+            if (n > 0) {
+                user[n] = '\0';
+            }
+            char remote_FileName[256];
+            n = recv(sd, remote_FileName, sizeof(remote_FileName) - 1, 0);
+            if (n > 0) {
+                remote_FileName[n] = '\0';
+            }
+            char local_FileName[256];
+            n = recv(sd, remote_FileName, sizeof(remote_FileName) - 1, 0);
+            if (n > 0) {
+                remote_FileName[n] = '\0';
+            }
+            printf("OPERACION GET_FILE FROM %s\n", user);
+            break;
+        default:
+            printf("Operación no reconocida: %c\n", operacion);
     }
-
+    
+    
     char status = 0;
     
     sendMessage(sd, &status, 1);
@@ -113,8 +208,6 @@ int main(int argc, char *argv[]) {
             free(client_sd);
             continue;
         }
-        printf("Ejecutando funcion..");
-        fflush(stdout);
         
         pthread_t hilo;
         pthread_create(&hilo, NULL, tratar_cliente, client_sd);
