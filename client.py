@@ -31,11 +31,11 @@ class client :
         Por ello para esto pasaremos la flag m que indicará al programa que se ejecutó correctamente y que hay más información para que haga otro listen.
         '''
         response = sock.recv(1)[0]
-        if response == 'm':
+        if response[0] == 'm':
             print(status_dict['0'])
-            print(sock.recv(2048)[0])
+            print(response[1:])
         else:
-            print(status_dict[str(response)])
+            print(status_dict[response[0]])
         sock.close()
 
     @staticmethod
@@ -53,6 +53,7 @@ class client :
         listener_thread.start()
         listener_thread.join()
 
+
     @staticmethod
     def  register(user) :
 
@@ -64,7 +65,6 @@ class client :
 
         client.tratar_mensaje(b''.join([b'0',user.encode()]),status_dict)
         return client.RC.ERROR
-
    
     @staticmethod
     def  unregister(user) :
@@ -77,8 +77,6 @@ class client :
 
         client.tratar_mensaje(b''.join([b'1',user.encode()]),status_dict)
         return client.RC.ERROR
-
-
     
     @staticmethod
     def  connect(user) :
@@ -93,8 +91,6 @@ class client :
         client.tratar_mensaje(b''.join([b'2',user.encode()]),status_dict)
         return client.RC.ERROR
 
-
-    
     @staticmethod
     def  disconnect(user) :
 

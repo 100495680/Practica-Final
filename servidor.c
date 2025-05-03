@@ -59,7 +59,7 @@ void *tratar_cliente(void *arg) {
     }
     char user[256];
     char fileName[256];
-    char description[1024];
+    char description[256];
     char remote_FileName[256];
     char local_FileName[256];
     char operacion = buffer[0];
@@ -80,7 +80,7 @@ void *tratar_cliente(void *arg) {
             break;
         case '4':
             strncpy(fileName, buffer + 257, 256);
-            strncpy(description, buffer + 513, 1024);
+            strncpy(description, buffer + 513, 256);
             printf("OPERACION PUBLISH FROM %s\n", user);
             break;
         case '5':
