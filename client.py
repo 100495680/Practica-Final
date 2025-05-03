@@ -44,11 +44,11 @@ class client :
         La intención de esta función es unificar el mandado de mensajes como primer argumento siempre se mandará el usuario aún siendo erroneo ya que el 
         mirar si el usuario existe o no, no es competencia del cliente pero el tener el usuario que eres si es la competencia.
         '''
-        for parametro in message:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            server_address = (client._server, client._port)
-            sock.connect(server_address)
-            sock.sendall(parametro)
+        
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_address = (client._server, client._port)
+        sock.connect(server_address)
+        sock.sendall(message)
         listener_thread = threading.Thread(target=client.tratar_respuesta, args=(sock, status_dict,))
         listener_thread.start()
         listener_thread.join()
@@ -62,7 +62,7 @@ class client :
             '2' : 'REGISTER FAIL'
         }
 
-        client.tratar_mensaje([b'0',user.encode()],status_dict)
+        client.tratar_mensaje(b''.join([b'0',user.encode()]),status_dict)
         return client.RC.ERROR
 
    
@@ -75,7 +75,7 @@ class client :
             '2' : 'UNREGISTER FAIL'
         }
 
-        client.tratar_mensaje([b'1',user.encode()],status_dict)
+        client.tratar_mensaje(b''.join([b'1',user.encode()]),status_dict)
         return client.RC.ERROR
 
 
@@ -90,7 +90,7 @@ class client :
             '3' : 'CONNECT FAIL'
         }
         client.user = user
-        client.tratar_mensaje([b'2',user.encode()],status_dict)
+        client.tratar_mensaje(b''.join([b'2',user.encode()]),status_dict)
         return client.RC.ERROR
 
 
@@ -105,7 +105,7 @@ class client :
             '3' : 'DISCONNECT FAIL'
         }
         client.user = 0
-        client.tratar_mensaje([b'3',user.encode()],status_dict)
+        client.tratar_mensaje(b''.join([b'3',user.encode()]),status_dict)
         return client.RC.ERROR
 
     @staticmethod
@@ -119,7 +119,7 @@ class client :
             '4' : 'PUBLISH FAIL'
         }
 
-        client.tratar_mensaje([b'4', client.user, fileName.encode(), description.encode()],status_dict)
+        client.tratar_mensaje(b''.join([b'4', client.user, fileName.encode(), description.encode()]),status_dict)
         return client.RC.ERROR
 
     @staticmethod
@@ -133,7 +133,7 @@ class client :
             '4' : 'DELETE FAIL'
         }
 
-        client.tratar_mensaje([b'5', client.user, fileName.encode()],status_dict)
+        client.tratar_mensaje(b''.join([b'5', client.user, fileName.encode()]),status_dict)
         return client.RC.ERROR
 
     @staticmethod
@@ -146,7 +146,7 @@ class client :
             '3' : 'LIST_USERS FAIL'
         }
     
-        client.tratar_mensaje([b'6', client.user],status_dict)
+        client.tratar_mensaje(b''.join([b'6', client.user]),status_dict)
         return client.RC.ERROR
 
     @staticmethod
@@ -160,7 +160,7 @@ class client :
             '4' : 'LIST_CONTENT FAIL'
         }
 
-        client.tratar_mensaje([b'7',user.encode()],status_dict)
+        client.tratar_mensaje(b''.join([b'7',user.encode()]),status_dict)
         return client.RC.ERROR
 
     @staticmethod
@@ -172,7 +172,7 @@ class client :
             '2' : 'GET_FILE FAIL'
         }
 
-        client.tratar_mensaje([b'8',user.encode(),remote_FileName.encode(), local_FileName.encode()],status_dict)
+        client.tratar_mensaje(b''.join([b'8',user.encode(),remote_FileName.encode(), local_FileName.encode()]),status_dict)
         return client.RC.ERROR
 
     # *
