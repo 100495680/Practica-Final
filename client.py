@@ -1,5 +1,12 @@
 from enum import Enum
+import threading
 import argparse
+import socket
+import sys
+import time
+
+
+
 
 class client :
 
@@ -17,55 +24,161 @@ class client :
 
     # ******************** METHODS *******************
 
+    @staticmethod
+    def tratar_respuesta(sock, status_dict):
+        ''' 
+        La intención de esta función es unificar las respuestas pero hay un problema y es que algunas respuestas tienen no solo es status.
+        Por ello para esto pasaremos la flag m que indicará al programa que se ejecutó correctamente y que hay más información para que haga otro listen.
+        '''
+        response = sock.recv(1)[0]
+        if response == 'm':
+            print(status_dict['0'])
+            print(sock.recv(2048)[0])
+        else:
+            print(status_dict[str(response[0])])
+        sock.close()
+
+    @staticmethod
+    def tratar_mensaje(message, status_dict):
+        '''
+        La intención de esta función es unificar el mandado de mensajes como en algunas peticiones se mandará más de un argumento y no podríamos encontrar una estandarización
+        mandandolo todo como un string. Lo que haremos es aprovechar python y mandar un string o lista de forma que si es una lista mandará más de un mensaje al sock.
+        '''
+        if isinstance(message, list):
+            for mensaje in message
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                server_address = (client._server, client._port)
+                sock.connect(server_address)
+                sock.sendall(mensaje)
+        else:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server_address = (client._server, client._port)
+            sock.connect(server_address)
+            sock.sendall(mensaje)
+        listener_thread = threading.Thread(target=client.tratar_respuesta, args=(sock, status_dict,))
+        listener_thread.start()
+        listener_thread.join()
 
     @staticmethod
     def  register(user) :
-        #  Write your code here
+
+        status_dict = {
+            '0' : 'REGISTER OK',
+            '1' : 'USERNAME IN USE',
+            '2' : 'REGISTER FAIL'
+        }
+
+        client.tratar_mensaje(user.encode(),status_dict)
         return client.RC.ERROR
 
    
     @staticmethod
     def  unregister(user) :
-        #  Write your code here
+
+        status_dict = {
+            '0' : 'UNREGISTER OK',
+            '1' : 'USER DOES NOT EXIST',
+            '2' : 'UNREGISTER FAIL'
+        }
+
+        client.tratar_mensaje(user.encode(),status_dict)
         return client.RC.ERROR
 
 
     
     @staticmethod
     def  connect(user) :
-        #  Write your code here
+
+        status_dict = {
+            '0' : 'CONNECT OK',
+            '1' : 'CONNECT FAIL , USER DOES NOT EXIST',
+            '2' : 'USER ALREADY CONNECTED',
+            '3' : 'CONNECT FAIL'
+        }
+
+        client.tratar_mensaje(user.encode(),status_dict)
         return client.RC.ERROR
 
 
     
     @staticmethod
     def  disconnect(user) :
-        #  Write your code here
+
+        status_dict = {
+            '0' : 'DISCONNECT OK',
+            '1' : 'DISCONNECT FAIL, USER DOES NOT EXIST',
+            '2' : 'DISCONNECT FAIL, USER NOT CONNECTED',
+            '3' : 'DISCONNECT FAIL'
+        }
+
+        client.tratar_mensaje(user.encode(),status_dict)
         return client.RC.ERROR
 
     @staticmethod
     def  publish(fileName,  description) :
-        #  Write your code here
+
+        status_dict = {
+            '0' : 'PUBLISH OK',
+            '1' : 'PUBLISH FAIL, USER DOES NOT EXIST',
+            '2' : 'PUBLISH FAIL, USER NOT CONNECTED',
+            '3' : 'PUBLISH FAIL, CONTENT ALREADY PUBLISHED',
+            '4' : 'PUBLISH FAIL'
+        }
+
+        client.tratar_mensaje(user.encode(),status_dict)
         return client.RC.ERROR
 
     @staticmethod
     def  delete(fileName) :
-        #  Write your code here
+
+        status_dict = {
+            '0' : 'DELETE OK',
+            '1' : 'DELETE FAIL, USER DOES NOT EXIST',
+            '2' : 'DELETE FAIL, USER NOT CONNECTED',
+            '3' : 'DELETE FAIL, CONTENT NOT PUBLISHED',
+            '4' : 'DELETE FAIL'
+        }
+
+        client.tratar_mensaje(user.encode(),status_dict)
         return client.RC.ERROR
 
     @staticmethod
     def  listusers() :
-        #  Write your code here
+
+        status_dict = {
+            '0' : 'PUBLISH OK',
+            '1' : 'LIST_USERS FAIL, USER DOES NOT EXIST',
+            '2' : 'LIST_USERS FAIL, USER NOT CONNECTED',
+            '3' : 'LIST_USERS FAIL'
+        }
+
+        client.tratar_mensaje(user.encode(),status_dict)
         return client.RC.ERROR
 
     @staticmethod
     def  listcontent(user) :
-        #  Write your code here
+
+        status_dict = {
+            '0' : 'LIST_CONTENT OK',
+            '1' : 'LIST_CONTENT FAIL, USER DOES NOT EXIST',
+            '2' : 'LIST_CONTENT FAIL, USER NOT CONNECTED',
+            '3' : 'LIST_CONTENT FAIL, REMOTE USER DOES NOT EXIST',
+            '4' : 'LIST_CONTENT FAIL'
+        }
+
+        client.tratar_mensaje(user.encode(),status_dict)
         return client.RC.ERROR
 
     @staticmethod
     def  getfile(user,  remote_FileName,  local_FileName) :
-        #  Write your code here
+
+        status_dict = {
+            '0' : 'GET_FILE OK',
+            '1' : 'GET_FILE FAIL, FILE NOT EXIST',
+            '2' : 'GET_FILE FAIL'
+        }
+
+        client.tratar_mensaje(user.encode(),status_dict)
         return client.RC.ERROR
 
     # *
