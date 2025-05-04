@@ -10,6 +10,11 @@
 
 #define MAX_BUFFER 2048
 
+struct argumentos { // Nesetamos mandar el sd y la ip, puerto del cliente
+        int sd;
+        struct sockaddr_in addr;
+}
+
 // Funciones tipo de mandado y recepción de mensajes
 
 int sendMessage(int socket, char * buffer, int len)
@@ -49,8 +54,14 @@ int recvMessage(int socket, char *buffer, int len)
 
 
 void *tratar_cliente(void *arg) {
-    int sd = *(int *)arg;
-    free(arg);
+    // Pasamos como argumentos el sd, ip y puerto
+    struct argumentos *info = (struct argumentos *)arg;
+    int sd = info->sd;
+    struct sockaddr_in addr = info->addr;
+    char ip[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(addr.sin_addr), ip, INET_ADDRSTRLEN);
+    int port = ntohs(addr.sin_port);
+    free(info); 
 
     char buffer[2048];
     int n = recv(sd, buffer, sizeof(buffer) - 1, 0);
@@ -149,9 +160,11 @@ int main(int argc, char *argv[]) {
     fflush(stdout);
 
     while (1) {
-        client_sd = malloc(sizeof(int));
+        struct argumentos argumentos;
+        argumentos = malloc(sizeof(struct argumentos));
+        argumentos.addr = client_addr;
         client_len = sizeof(client_addr);
-        *client_sd = accept(server_sd, (struct sockaddr *)&client_addr, &client_len);
+        argumentos.sd = accept(server_sd, (struct sockaddr *)&client_addr, &client_len);
         if (*client_sd < 0) {
             perror("Error en accept");
             free(client_sd);
@@ -159,7 +172,7 @@ int main(int argc, char *argv[]) {
         }
         
         pthread_t hilo;
-        pthread_create(&hilo, NULL, tratar_cliente, client_sd);
+        pthread_create(&hilo, NULL, tratar_cliente, argumentos);
         pthread_detach(hilo);  // Liberar recursos automáticamente
     }
     

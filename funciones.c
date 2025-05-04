@@ -16,25 +16,24 @@ struct Archivos {
 
 struct Usuarios {
     char user[256];
-    struct sockaddr_in ipadd;
+    char ip[16];
     int puerto;
     struct Archivos * lista_archivos;
 }
 
-struct * Usuarios actualizar_lista_usuarios(struct * Usuarios lista_usuarios, int capacidad, struct Usuarios usuario ) {
+void actualizar_lista_usuarios(struct * Usuarios lista_usuarios, int capacidad, struct Usuarios usuario ) {
     capacidad ++;
     lista_usuarios = (struct Usuarios *)realloc(lista_usuarios, capacidad * sizeof(struct Usuarios));
     lista_usuarios[capacidad] = usuario;
-    return lista_usuarios
 }
 
-struct * Archivos actualizar_lista_archivos(struct * Archivos lista_archivos, int capacidad, struct Archivos archivo ) {
+void actualizar_lista_archivos(struct * Archivos lista_archivos, int capacidad, struct Archivos archivo ) {
     capacidad ++;
     lista_archivos = (struct Archivos *)realloc(lista_archivos, capacidad * sizeof(struct Archivos));
     lista_archivos[capacidad] = archivo;
-    return lista_archivos
 }
 
-int registrar (char * user) {
-    
+int registrar (char * user, char * ip, int puerto) {
+    struct Usuarios usuario;
+    strncpy(usuario.user, user);
 }
