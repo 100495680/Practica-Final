@@ -1,11 +1,11 @@
 int registrar (char *user);
 int unregistrar (char *user);
-int connect (char *user);
-int disconnect (char *user);
+int connect (char *user,  char * ip, int puerto);
+int disconnect (char *user,  char * ip, int puerto);
 int publish (char *fileName, char *description);
 int delete (char *fileName);
-char * listusers (char *user);
-char * listcontent (char *user);
+int listusers (char *user);
+int listcontent (char *user);
 int getfile (char *user, char *remote_FileName, char *local_FileName);
 
 
@@ -49,7 +49,7 @@ int borrar_usuario(char *user) {
             encontrado = i;
             break;
         }
-    }
+    }char
     if (encontrado == -1) return 1;
     
     for (int j = encontrado; j < capacidad_usuarios - 1; j++) {
@@ -94,6 +94,9 @@ int borrar_archivo(struct Archivos * lista, int capacidad, char * fileName) {
     return 0;
 }
 
+
+
+// ---------------------------------------------------------------
 // Definición de funciones del servidor
 
 int registrar (char * user) {
@@ -150,14 +153,14 @@ int delete (char * user, char * fileName, char * description) {
     return 0
 }
 
-char * listusers(char * user) {
+int listusers(char * user, char * string) {
     struct Usuarios usuario = buscar_usuario(user);
-    if (usuario == NULL) return '1';
-    if (usuario.ip == NULL) return '2';
+    if (usuario == NULL) return 1;
+    if (usuario.ip == NULL) return 2;
 
     int string_size = capacidad_usuarios * 280; // Son 256 del usuario y algo más para los separadores
     int string_size ++;
-    char * string = malloc(string_size);
+    string = malloc(string_size);
     strcat(string, "\t");
     for (int i = 0; i < capacidad_usuarios; i++) {
         strcat(string, lista_usuarios[i].user);
@@ -165,18 +168,18 @@ char * listusers(char * user) {
             strcat(string, "\n\t"); 
         }
     }
-    return string
+    return 0
 }
 
-char * listcontent(char * user) {
+int listcontent(char * user, char * string) {
     struct Usuarios usuario = buscar_usuario(user);
-    if (usuario == NULL) return '1';
-    if (usuario.ip == NULL) return '2';
+    if (usuario == NULL) return 1;
+    if (usuario.ip == NULL) return 2;
 
     int capacidad = usuario.cantidad_archivos;
     int string_size = capacidad * 280; // Son 256 del usuario y algo más para los separadores
     int string_size ++;
-    char * string = malloc(string_size);
+    string = malloc(string_size);
     strcat(string, "\t");
     for (int i = 0; i < capacidad; i++) {
         strcat(string, usuario.lista_archivos[i].user);
@@ -184,17 +187,48 @@ char * listcontent(char * user) {
             strcat(string, "\n\t"); 
         }
     }
-    return string
+    return 0
 }
 
 int getfile(char *user, char *remote_FileName, char *local_FileName) {
-    
+    struct Usuarios demandante = buscar_usuario(user);
+    if (usuario == NULL) return 1;
+    if (usuario.ip == NULL) return 2;
+
     for (int j; j<capacidad_usuarios; j++) {
         struct Usuarios usuario = lista_usuarios[j];
         int capacidad = usuario.cantidad_archivos;
         for (int i; i<capacidad; i++) {
-            if (strcmp(lista_usuarios[j].lista_archivos[i].fileName, remote_FileName) == 0 )
-                
+            if (strcmp(lista_usuarios[j].lista_archivos[i].fileName, remote_FileName) == 0 ) {
+            
+                int puerto = lista_usuarios[j].lista_archivos[i].puerto;
+                struct sockaddr_in server_addr;
+                FILE *fp;
+
+                // Nos conectamos al usuario y mandamos la petición
+                int sockfd = socket(AF_INET, SOCK_STREAM, 0)
+                memset(&server_addr, 0, sizeof(server_addr));
+                server_addr.sin_family = AF_INET;
+                server_addr.sin_port = htons(puerto);
+                inet_pton(AF_INET, lista_usuarios[j].lista_archivos[i].ip, &server_addr.sin_addr)
+                connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr))
+                send(sockfd, remote_filename, strlen(remote_filename), 0);
+
+                // Creamos el archivo a recibir
+                fp = fopen(local_Filename, "wb");
+
+                // Recibimos los datos y los guardamos
+                char buffer[MAX_BUFFER];
+                ssize_t bytes_received;
+                while ((bytes_received = recv(sockfd, buffer, MAX_BUFFER, 0)) > 0) {
+                    fwrite(buffer, 1, bytes_received, fp);
+                }
+
+                fclose(fp);
+                close(sockfd);
+                return 0
+            }
         }
     }
+    return 3
 }

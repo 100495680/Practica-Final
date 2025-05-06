@@ -21,8 +21,18 @@ class client :
     # ****************** ATTRIBUTES ******************
     _server = None
     _port = -1
-
+    _hilo_escucha = threading.Thread(target=client.escuchar_peticiones)
     # ******************** METHODS *******************
+
+    @staticmethod
+    def escuchar_peticiones():
+        while (True):
+            request = self.sock.recv(256).decode() # Espera recibir la dirección del archivo
+            if request:
+                with open(request, "rb") as f:
+                    data = f.read()
+                sock.sendall(data)
+            time.sleep(1)
 
     @staticmethod
     def tratar_respuesta(sock, status_dict):
@@ -88,6 +98,7 @@ class client :
             '3' : 'CONNECT FAIL'
         }
         client.user = user
+        client._hilo_escucha.start()
         client.tratar_mensaje(b''.join([b'2',user.encode()]),status_dict)
         return client.RC.ERROR
 
@@ -102,6 +113,7 @@ class client :
         }
         client.user = 0
         client.tratar_mensaje(b''.join([b'3',user.encode()]),status_dict)
+        client._hilo_escucha.join()
         return client.RC.ERROR
 
     @staticmethod

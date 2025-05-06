@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include <sys/socket.h>
+#include <funciones.c>
 
 #define MAX_BUFFER 2048
 
@@ -60,7 +61,7 @@ void *tratar_cliente(void *arg) {
     struct sockaddr_in addr = info->addr;
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(addr.sin_addr), ip, INET_ADDRSTRLEN);
-    int port = ntohs(addr.sin_port);
+    int puerto = ntohs(addr.sin_port);
     free(info); 
 
     char buffer[2048];
@@ -73,50 +74,83 @@ void *tratar_cliente(void *arg) {
     char description[256];
     char remote_FileName[256];
     char local_FileName[256];
+    char status;
+    char * string;
     char operacion = buffer[0];
     strncpy(user, buffer + 1, 256);
 
     switch (operacion) {
         case '0':
             printf("OPERACION REGISTER FROM %s\n", user);
+            status = (char) registrar(user);
             break;
         case '1':
             printf("OPERACION UNREGISTER FROM %s\n", user);
+            stauts = (char) unregistrar(user);
             break;
         case '2':
             printf("OPERACION CONNECT FROM %s\n", user);
+            status = (char) connect(user, ip, puerto);
             break;
         case '3':
             printf("OPERACION DISCONNECT FROM %s\n", user);
+            status = (char) disconnect(user, ip, puerto);
             break;
         case '4':
             strncpy(fileName, buffer + 257, 256);
             strncpy(description, buffer + 513, 256);
             printf("OPERACION PUBLISH FROM %s\n", user);
+            status = (char) publish(user, fileName, description);
             break;
         case '5':
             strncpy(fileName, buffer + 257, 256);
             printf("OPERACION DELETE FROM %s\n", user);
+            status = (char) delete(user, fileName);
             break;
         case '6':
-            printf("OPERACION LIST_USERS FROM %s\n", user);        
+            printf("OPERACION LIST_USERS FROM %s\n", user);  
+            int res = listusers(user, string);
+            if (res == 0) {
+                status = 'm';
+            } else {
+                status = (char) res;
+            }
+                  
             break;
         case '7':
             printf("OPERACION LIST_CONTENT FROM %s\n", user);
+            int res = listcontent(user, string);
+            if (res == 0) {
+                status = 'm';
+            } else {
+                status = (char) res;
+            }
             break;
         case '8':
             strncpy(remote_FileName, buffer + 257, 256);
             strncpy(local_FileName, buffer + 513, 256);
             printf("OPERACION GET_FILE FROM %s\n", user);
+            status = (char) getfile(user, remote_FileName, local_FileName);
             break;
         default:
             printf("Operación no reconocida: %c\n", operacion);
     }
     
     
-    char status = 0;
+    if (status == 'm') {
+        size_t tamano = strlen(string);
+        char *mensaje = malloc(tamano + 2);
     
-    sendMessage(sd, &status, 1);
+        mensaje[0] = status;             // Metemos el status lo primero. Aquí estará m como la flag de more que se utiliza en UDP
+        strcpy(mensaje + 1, string);
+    
+        sendMessage(sd, mensaje, tamano + 1);
+        
+        free(string);
+        free(mensaje);
+    } else {
+        sendMessage(sd, &status, 1);
+    }
     close(sd);
     return NULL;
 }
