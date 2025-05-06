@@ -7,7 +7,7 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include <sys/socket.h>
-#include <funciones.c>
+#include "funciones.c"
 
 #define MAX_BUFFER 2048
 
@@ -145,7 +145,7 @@ void *tratar_cliente(void *arg) {
         strcpy(mensaje + 1, string);
     
         sendMessage(sd, mensaje, tamano + 1);
-        
+
         free(string);
         free(mensaje);
     } else {

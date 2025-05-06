@@ -12,7 +12,7 @@ int getfile (char *user, char *remote_FileName, char *local_FileName);
 struct Archivos {
     char fileName[256];
     char description[256];
-}
+};
 
 struct Usuarios {
     char user[256];
@@ -20,7 +20,7 @@ struct Usuarios {
     int puerto;
     struct Archivos * lista_archivos;
     int cantidad_archivos;
-}
+};
 
 
 // Las funciones y declaraciones asociadas a la lista dinámica de usuarios
@@ -37,9 +37,9 @@ void actualizar_lista_usuarios(struct Usuarios usuario ) {
 struct Usuarios buscar_usuario(char * user) {
     for (int i; i<capacidad_usuarios; i++) {
         if (strcmp(lista_usuarios[i].user, user) == 0 )
-        return &lista_usuarios[i]
+        return lista_usuarios[i];
     }
-    return NULL
+    return NULL;
 }
 
 int borrar_usuario(char *user) {
@@ -49,7 +49,7 @@ int borrar_usuario(char *user) {
             encontrado = i;
             break;
         }
-    }char
+    }
     if (encontrado == -1) return 1;
     
     for (int j = encontrado; j < capacidad_usuarios - 1; j++) {
@@ -64,16 +64,16 @@ int borrar_usuario(char *user) {
 
 void actualizar_lista_archivos(struct Archivos * lista, int capacidad, struct Archivos archivo ) {
     capacidad ++;
-    listas = (struct Archivos *)realloc(lista, capacidad * sizeof(struct Archivos));
-    lista_archivos[capacidad] = archivo;
+    lista = (struct Archivos *)realloc(lista, capacidad * sizeof(struct Archivos));
+    lista[capacidad] = archivo;
 }
 
 struct Archivos buscar_archivo(struct Archivos * lista, int capacidad, char * fileName) {
     for (int i; i<capacidad; i++) {
         if (strcmp(lista[i].fileName, fileName) == 0 )
-        return &lista_usuarios[i]
+        return lista[i];
     }
-    return NULL
+    return NULL;
 }
 
 int borrar_archivo(struct Archivos * lista, int capacidad, char * fileName) {
@@ -90,7 +90,7 @@ int borrar_archivo(struct Archivos * lista, int capacidad, char * fileName) {
         lista[j] = lista[j + 1];
     }
     capacidad--;
-    lista = realloc(lista, capacidad * sizeof(Usuarios)); // Parecido a un free pero con más pasos
+    lista = realloc(lista, capacidad * sizeof(struct Usuarios)); // Parecido a un free pero con más pasos
     return 0;
 }
 
@@ -101,13 +101,13 @@ int borrar_archivo(struct Archivos * lista, int capacidad, char * fileName) {
 
 int registrar (char * user) {
     struct Usuarios usuario;
-    strncpy(usuario.user, user);
+    strncpy(usuario.user, user, 256);
     struct Usuarios prueba = buscar_usuario(user);
     if (prueba == NULL) {
         actualizar_lista_usuarios(usuario);
-        return 0
+        return 0;
     }
-    return 1
+    return 1;
 }
 
 int unregistrar (char * user) {
@@ -118,9 +118,9 @@ int connect (char * user,  char * ip, int puerto) {
     struct Usuarios usuario = buscar_usuario(user);
     if (usuario == NULL) return 1;
     if (usuario.ip != NULL) return 2;
-    strncpy(usuario.ip, ip);
+    strncpy(usuario.ip, ip, 256);
     usuario.puerto = puerto;
-    return 0
+    return 0;
 }
 
 int disconnect (char * user,  char * ip, int puerto) {
@@ -129,7 +129,7 @@ int disconnect (char * user,  char * ip, int puerto) {
     if (usuario.ip == NULL) return 2;
     usuario.ip = NULL;
     usuario.puerto = NULL;
-    return 0
+    return 0;
 }
 
 int publish (char * user, char * fileName, char * description) {
@@ -138,10 +138,10 @@ int publish (char * user, char * fileName, char * description) {
     if (usuario.ip == NULL) return 2;
     if (buscar_archivo(usuario.lista_archivos, usuario.cantidad_archivos, fileName) != NULL) return 3;
     struct Archivos archivo;
-    strncpy(archivo.fileName, fileName);
-    strncpy(archivo.description, description);
+    strncpy(archivo.fileName, fileName, 256);
+    strncpy(archivo.description, description, 256);
     actualizar_lista_archivos(usuario.lista_archivos, usuario.cantidad_archivos, archivo);
-    return 0
+    return 0;
 }
 
 int delete (char * user, char * fileName, char * description) {
@@ -150,7 +150,7 @@ int delete (char * user, char * fileName, char * description) {
     if (usuario.ip == NULL) return 2;
     if (buscar_archivo(usuario.lista_archivos, usuario.cantidad_archivos, fileName) == NULL) return 3;
     borrar_archivo(usuario.lista_archivos, usuario.cantidad_archivos, fileName);
-    return 0
+    return 0;
 }
 
 int listusers(char * user, char * string) {
@@ -168,7 +168,7 @@ int listusers(char * user, char * string) {
             strcat(string, "\n\t"); 
         }
     }
-    return 0
+    return 0;
 }
 
 int listcontent(char * user, char * string) {
@@ -187,7 +187,7 @@ int listcontent(char * user, char * string) {
             strcat(string, "\n\t"); 
         }
     }
-    return 0
+    return 0;
 }
 
 int getfile(char *user, char *remote_FileName, char *local_FileName) {
@@ -226,9 +226,9 @@ int getfile(char *user, char *remote_FileName, char *local_FileName) {
 
                 fclose(fp);
                 close(sockfd);
-                return 0
+                return 0;
             }
         }
     }
-    return 3
+    return 3;
 }
