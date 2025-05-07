@@ -14,7 +14,7 @@
 struct argumentos { // Nesetamos mandar el sd y la ip, puerto del cliente
         int sd;
         struct sockaddr_in addr;
-}
+};
 
 // Funciones tipo de mandado y recepción de mensajes
 
@@ -69,6 +69,7 @@ void *tratar_cliente(void *arg) {
     if (n > 0) {
         buffer[n] = '\0';
     }
+    int res;
     char user[256];
     char fileName[256];
     char description[256];
@@ -86,15 +87,15 @@ void *tratar_cliente(void *arg) {
             break;
         case '1':
             printf("OPERACION UNREGISTER FROM %s\n", user);
-            stauts = (char) unregistrar(user);
+            status = (char) unregistrar(user);
             break;
         case '2':
             printf("OPERACION CONNECT FROM %s\n", user);
-            status = (char) connect(user, ip, puerto);
+            status = (char) conectar(user, ip, puerto);
             break;
         case '3':
             printf("OPERACION DISCONNECT FROM %s\n", user);
-            status = (char) disconnect(user, ip, puerto);
+            status = (char) desconectar(user);
             break;
         case '4':
             strncpy(fileName, buffer + 257, 256);
@@ -109,7 +110,7 @@ void *tratar_cliente(void *arg) {
             break;
         case '6':
             printf("OPERACION LIST_USERS FROM %s\n", user);  
-            int res = listusers(user, string);
+            res = listusers(user, string);
             if (res == 0) {
                 status = 'm';
             } else {
@@ -119,7 +120,7 @@ void *tratar_cliente(void *arg) {
             break;
         case '7':
             printf("OPERACION LIST_CONTENT FROM %s\n", user);
-            int res = listcontent(user, string);
+            res = listcontent(user, string);
             if (res == 0) {
                 status = 'm';
             } else {
@@ -194,11 +195,11 @@ int main(int argc, char *argv[]) {
     fflush(stdout);
 
     while (1) {
-        struct argumentos argumentos;
+        struct argumentos *argumentos;
         argumentos = malloc(sizeof(struct argumentos));
-        argumentos.addr = client_addr;
+        argumentos->addr = client_addr;
         client_len = sizeof(client_addr);
-        argumentos.sd = accept(server_sd, (struct sockaddr *)&client_addr, &client_len);
+        argumentos->sd = accept(server_sd, (struct sockaddr *)&client_addr, &client_len);
         if (*client_sd < 0) {
             perror("Error en accept");
             free(client_sd);
@@ -206,7 +207,7 @@ int main(int argc, char *argv[]) {
         }
         
         pthread_t hilo;
-        pthread_create(&hilo, NULL, tratar_cliente, argumentos);
+        pthread_create(&hilo, NULL, tratar_cliente, (void *)argumentos);
         pthread_detach(hilo);  // Liberar recursos automáticamente
     }
     
