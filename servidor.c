@@ -83,30 +83,30 @@ void *tratar_cliente(void *arg) {
     switch (operacion) {
         case '0':
             printf("OPERACION REGISTER FROM %s\n", user);
-            status = (char) registrar(user);
+            status = '0' + registrar(user);
             break;
         case '1':
             printf("OPERACION UNREGISTER FROM %s\n", user);
-            status = (char) unregistrar(user);
+            status = '0' + unregistrar(user);
             break;
         case '2':
             printf("OPERACION CONNECT FROM %s\n", user);
-            status = (char) conectar(user, ip, puerto);
+            status = '0' + conectar(user, ip, puerto);
             break;
         case '3':
             printf("OPERACION DISCONNECT FROM %s\n", user);
-            status = (char) desconectar(user);
+            status = '0' + desconectar(user);
             break;
         case '4':
             strncpy(fileName, buffer + 257, 256);
             strncpy(description, buffer + 513, 256);
             printf("OPERACION PUBLISH FROM %s\n", user);
-            status = (char) publish(user, fileName, description);
+            status = '0' + publish(user, fileName, description);
             break;
         case '5':
             strncpy(fileName, buffer + 257, 256);
             printf("OPERACION DELETE FROM %s\n", user);
-            status = (char) delete(user, fileName);
+            status = '0' + delete(user, fileName);
             break;
         case '6':
             printf("OPERACION LIST_USERS FROM %s\n", user);  
@@ -114,7 +114,7 @@ void *tratar_cliente(void *arg) {
             if (res == 0) {
                 status = 'm';
             } else {
-                status = (char) res;
+                status = '0' + res;
             }
                   
             break;
@@ -124,14 +124,14 @@ void *tratar_cliente(void *arg) {
             if (res == 0) {
                 status = 'm';
             } else {
-                status = (char) res;
+                status = '0' + res;
             }
             break;
         case '8':
             strncpy(remote_FileName, buffer + 257, 256);
             strncpy(local_FileName, buffer + 513, 256);
             printf("OPERACION GET_FILE FROM %s\n", user);
-            status = (char) getfile(user, remote_FileName, local_FileName);
+            status = '0' + getfile(user, remote_FileName, local_FileName);
             break;
         default:
             printf("Operación no reconocida: %c\n", operacion);
@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
         argumentos->addr = client_addr;
         client_len = sizeof(client_addr);
         argumentos->sd = accept(server_sd, (struct sockaddr *)&client_addr, &client_len);
-        if (*client_sd < 0) {
+        if (argumentos->sd < 0) {
             perror("Error en accept");
             free(client_sd);
             continue;

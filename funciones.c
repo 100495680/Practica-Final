@@ -28,16 +28,16 @@ struct Usuarios {
 // Las funciones y declaraciones asociadas a la lista dinámica de usuarios
 
 struct Usuarios * lista_usuarios = NULL; 
-int capacidad_usuarios;
+int capacidad_usuarios = 0;
 
 void actualizar_lista_usuarios(struct Usuarios usuario ) {
     capacidad_usuarios ++;
     lista_usuarios = (struct Usuarios *)realloc(lista_usuarios, capacidad_usuarios * sizeof(struct Usuarios));
-    lista_usuarios[capacidad_usuarios] = usuario;
+    lista_usuarios[capacidad_usuarios-1] = usuario;
 }
 
 struct Usuarios * buscar_usuario(char * user) {
-    for (int i; i<capacidad_usuarios; i++) {
+    for (int i = 0; i<capacidad_usuarios; i++) {
         if (strcmp(lista_usuarios[i].user, user) == 0 )
         return &lista_usuarios[i];
     }
@@ -67,11 +67,11 @@ int borrar_usuario(char *user) {
 void actualizar_lista_archivos(struct Archivos * lista, int capacidad, struct Archivos archivo ) {
     capacidad ++;
     lista = (struct Archivos *)realloc(lista, capacidad * sizeof(struct Archivos));
-    lista[capacidad] = archivo;
+    lista[capacidad-1] = archivo;
 }
 
 struct Archivos * buscar_archivo(struct Archivos * lista, int capacidad, char * fileName) {
-    for (int i; i<capacidad; i++) {
+    for (int i =0; i<capacidad; i++) {
         if (strcmp(lista[i].fileName, fileName) == 0 )
         return &lista[i];
     }

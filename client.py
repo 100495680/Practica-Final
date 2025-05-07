@@ -22,17 +22,22 @@ class client :
     _server = None
     _port = -1
     _hilo_escucha = None
+    _sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # ******************** METHODS *******************
 
     @staticmethod
     def escuchar_peticiones():
-        while (True):
-            request = self.sock.recv(256).decode() # Espera recibir la dirección del archivo
-            if request:
-                with open(request, "rb") as f:
-                    data = f.read()
-                sock.sendall(data)
-            time.sleep(1)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_sock: # Usamos el with para que cierre el socket cuando el programa acabe
+            server_sock.bind(("0.0.0.0", 8080))  # Escuchamos a cualquier trafico que nos digan por ello usamos 0.0.0.0
+            server_sock.listen()
+
+            while True:
+                client_sock, client_address = server_sock.accept()
+                request = client_sock.recv(256).decode() # Espera recibir la dirección del archivo
+                if request:
+                    with open(request, "rb") as f:
+                        data = f.read()
+                    sock.sendall(data)
 
     @staticmethod
     def tratar_respuesta(sock, status_dict):
@@ -40,13 +45,12 @@ class client :
         La intención de esta función es unificar las respuestas pero hay un problema y es que algunas respuestas tienen no solo es status.
         Por ello para esto pasaremos la flag m que indicará al programa que se ejecutó correctamente y que hay más información para que haga otro listen.
         '''
-        response = sock.recv(1)[0]
-        if response[0] == 'm':
+        response = sock.recv(1).decode()
+        if response == 'm':
             print(status_dict['0'])
             print(response[1:])
         else:
             print(status_dict[response[0]])
-        sock.close()
 
     @staticmethod
     def tratar_mensaje(message, status_dict):
@@ -54,8 +58,7 @@ class client :
         La intención de esta función es unificar el mandado de mensajes como primer argumento siempre se mandará el usuario aún siendo erroneo ya que el 
         mirar si el usuario existe o no, no es competencia del cliente pero el tener el usuario que eres si es la competencia.
         '''
-        
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock = client._sock
         server_address = (client._server, client._port)
         sock.connect(server_address)
         sock.sendall(message)
@@ -98,9 +101,9 @@ class client :
             '3' : 'CONNECT FAIL'
         }
         client.user = user
-        client._hilo_escucha = threading.Thread(target=self.escuchar_peticiones)
-        client._hilo_escucha.start()
         client.tratar_mensaje(b''.join([b'2',user.encode()]),status_dict)
+        client._hilo_escucha = threading.Thread(target=client.escuchar_peticiones)
+        client._hilo_escucha.start()
         return client.RC.ERROR
 
     @staticmethod
