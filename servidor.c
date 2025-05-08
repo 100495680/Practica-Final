@@ -110,13 +110,13 @@ void *tratar_cliente(void *arg) {
             break;
         case '6':
             printf("OPERACION LIST_USERS FROM %s\n", user);  
-            res = listusers(user, string);
+            res = listusers(user, &string);
             if (res == 0) {
                 status = 'm';
             } else {
                 status = '0' + res;
             }
-                  
+            printf("%s",string); 
             break;
         case '7':
             printf("OPERACION LIST_CONTENT FROM %s\n", user);
@@ -126,6 +126,7 @@ void *tratar_cliente(void *arg) {
             } else {
                 status = '0' + res;
             }
+            printf("%s",string);
             break;
         case '8':
             strncpy(remote_FileName, buffer + 257, 256);

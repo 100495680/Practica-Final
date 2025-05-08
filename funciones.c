@@ -4,7 +4,7 @@ int conectar (char *user,  char * ip, int puerto);
 int desconectar (char *user);
 int publish (char * user, char *fileName, char *description);
 int delete (char * user, char *fileName);
-int listusers (char *user, char * string);
+int listusers (char *user, char ** string);
 int listcontent (char *user, char * string);
 int getfile (char *user, char *remote_FileName, char *local_FileName);
 
@@ -120,9 +120,9 @@ int conectar (char * user,  char * ip, int puerto) {
     struct Usuarios * ptr = buscar_usuario(user);
     if (ptr == NULL) return 1;
     struct Usuarios usuario = *ptr;
-    if (usuario.ip != NULL) return 2;
-    strncpy(usuario.ip, ip, 256);
-    usuario.puerto = puerto;
+    if (strcmp(ptr->ip, "") != 0) return 2;
+    strncpy(ptr->ip, ip, 16);
+    ptr->puerto = puerto;
     return 0;
 }
 
@@ -130,9 +130,9 @@ int desconectar (char * user) {
     struct Usuarios * ptr = buscar_usuario(user);
     if (ptr == NULL) return 1;
     struct Usuarios usuario = *ptr;
-    if (usuario.ip == "") return 2;
-    strcpy(usuario.ip, "");
-    usuario.puerto = 0;
+    if (strcmp(ptr->ip, "") == 0) return 2;
+    strcpy(ptr->ip, "");
+    ptr->puerto = 0;
     return 0;
 }
 
@@ -140,7 +140,7 @@ int publish (char * user, char * fileName, char * description) {
     struct Usuarios * ptr = buscar_usuario(user);
     if (ptr == NULL) return 1;
     struct Usuarios usuario = *ptr;
-    if (usuario.ip == "") return 2;
+    if (strcmp(ptr->ip, "") == 0) return 2;
     if (buscar_archivo(usuario.lista_archivos, usuario.cantidad_archivos, fileName) != NULL) return 3;
     struct Archivos archivo;
     strncpy(archivo.fileName, fileName, 256);
@@ -153,28 +153,30 @@ int delete (char * user, char * fileName) {
     struct Usuarios * ptr = buscar_usuario(user);
     if (ptr == NULL) return 1;
     struct Usuarios usuario = *ptr;
-    if (usuario.ip == "") return 2;
+    printf("%s/%s", ptr->ip, user);
+    if (strcmp(ptr->ip, "") == 0) return 2;
     if (buscar_archivo(usuario.lista_archivos, usuario.cantidad_archivos, fileName) == NULL) return 3;
     borrar_archivo(usuario.lista_archivos, usuario.cantidad_archivos, fileName);
     return 0;
 }
 
-int listusers(char * user, char * string) {
+int listusers(char * user, char ** string) {
     struct Usuarios * ptr = buscar_usuario(user);
     if (ptr == NULL) return 1;
     struct Usuarios usuario = *ptr;
-    if (usuario.ip == "") return 2;
+    if (strcmp(ptr->ip, "") == 0) return 2;
 
     int string_size = capacidad_usuarios * 280; // Son 256 del usuario y algo más para los separadores
     string_size ++;
-    string = malloc(string_size);
-    strcat(string, "\t");
-    char *formateo;
+    *string = malloc(string_size);
+    *string[0] = '\0';
+    strcat(*string, "\t");
+    char formateo[800];
     for (int i = 0; i < capacidad_usuarios; i++) {
         sscanf(formateo, "%s\t%s\t%d", lista_usuarios[i].user, lista_usuarios[i].ip, &lista_usuarios[i].puerto);
-        strcat(string, formateo);
+        strcat(*string, formateo);
         if (i < capacidad_usuarios - 1) {
-            strcat(string, "\n\t"); 
+            strcat(*string, "\n\t"); 
         }
     }
     return 0;
@@ -184,7 +186,7 @@ int listcontent(char * user, char * string) {
     struct Usuarios * ptr = buscar_usuario(user);
     if (ptr == NULL) return 1;
     struct Usuarios usuario = *ptr;
-    if (usuario.ip == "") return 2;
+    if (strcmp(ptr->ip, "") == 0) return 2;
 
     int capacidad = usuario.cantidad_archivos;
     int string_size = capacidad * 280; // Son 256 del usuario y algo más para los separadores
@@ -204,7 +206,7 @@ int getfile(char *user, char *remote_FileName, char *local_FileName) {
     struct Usuarios * ptr = buscar_usuario(user);
     if (ptr == NULL) return 1;
     struct Usuarios usuario = *ptr;
-    if (usuario.ip == "") return 2;
+    if (strcmp(ptr->ip, "") == 0) return 2;
 
     for (int j; j<capacidad_usuarios; j++) {
         struct Usuarios usuario = lista_usuarios[j];

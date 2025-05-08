@@ -22,13 +22,13 @@ class client :
     _server = None
     _port = -1
     _hilo_escucha = None
-    _sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    _user = None
     # ******************** METHODS *******************
 
     @staticmethod
     def escuchar_peticiones():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_sock: # Usamos el with para que cierre el socket cuando el programa acabe
-            server_sock.bind(("0.0.0.0", 8080))  # Escuchamos a cualquier trafico que nos digan por ello usamos 0.0.0.0
+            server_sock.bind(("0.0.0.0", 8081))  # Escuchamos a cualquier trafico que nos digan por ello usamos 0.0.0.0
             server_sock.listen()
 
             while True:
@@ -37,7 +37,7 @@ class client :
                 if request:
                     with open(request, "rb") as f:
                         data = f.read()
-                    sock.sendall(data)
+                    client_sock.sendall(data)
 
     @staticmethod
     def tratar_respuesta(sock, status_dict):
@@ -58,13 +58,13 @@ class client :
         La intención de esta función es unificar el mandado de mensajes como primer argumento siempre se mandará el usuario aún siendo erroneo ya que el 
         mirar si el usuario existe o no, no es competencia del cliente pero el tener el usuario que eres si es la competencia.
         '''
-        sock = client._sock
-        server_address = (client._server, client._port)
-        sock.connect(server_address)
-        sock.sendall(message)
-        listener_thread = threading.Thread(target=client.tratar_respuesta, args=(sock, status_dict,))
-        listener_thread.start()
-        listener_thread.join()
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            server_address = (client._server, client._port)
+            sock.connect(server_address)
+            sock.sendall(message)
+            listener_thread = threading.Thread(target=client.tratar_respuesta, args=(sock, status_dict,))
+            listener_thread.start()
+            listener_thread.join()
 
 
     @staticmethod
@@ -76,7 +76,7 @@ class client :
             '2' : 'REGISTER FAIL'
         }
 
-        client.tratar_mensaje(b''.join([b'0',user.encode()]),status_dict)
+        client.tratar_mensaje(b''.join([b'0',user.encode().ljust(256, b'\x00')]),status_dict)
         return client.RC.ERROR
    
     @staticmethod
@@ -88,7 +88,7 @@ class client :
             '2' : 'UNREGISTER FAIL'
         }
 
-        client.tratar_mensaje(b''.join([b'1',user.encode()]),status_dict)
+        client.tratar_mensaje(b''.join([b'1',user.encode().ljust(256, b'\x00')]),status_dict)
         return client.RC.ERROR
     
     @staticmethod
@@ -100,8 +100,8 @@ class client :
             '2' : 'USER ALREADY CONNECTED',
             '3' : 'CONNECT FAIL'
         }
-        client.user = user
-        client.tratar_mensaje(b''.join([b'2',user.encode()]),status_dict)
+        client._user = user
+        client.tratar_mensaje(b''.join([b'2',user.encode().ljust(256, b'\x00')]),status_dict)
         client._hilo_escucha = threading.Thread(target=client.escuchar_peticiones)
         client._hilo_escucha.start()
         return client.RC.ERROR
@@ -116,7 +116,7 @@ class client :
             '3' : 'DISCONNECT FAIL'
         }
         client.user = 0
-        client.tratar_mensaje(b''.join([b'3',user.encode()]),status_dict)
+        client.tratar_mensaje(b''.join([b'3',user.encode().ljust(256, b'\x00')]),status_dict)
         client._hilo_escucha.join()
         return client.RC.ERROR
 
@@ -131,7 +131,7 @@ class client :
             '4' : 'PUBLISH FAIL'
         }
 
-        client.tratar_mensaje(b''.join([b'4', client.user, fileName.encode(), description.encode()]),status_dict)
+        client.tratar_mensaje(b''.join([b'4', client._user.encode().ljust(256, b'\x00'), fileName.encode().ljust(256, b'\x00'), description.encode().ljust(256, b'\x00')]),status_dict)
         return client.RC.ERROR
 
     @staticmethod
@@ -145,7 +145,7 @@ class client :
             '4' : 'DELETE FAIL'
         }
 
-        client.tratar_mensaje(b''.join([b'5', client.user, fileName.encode()]),status_dict)
+        client.tratar_mensaje(b''.join([b'5', client._user.encode().ljust(256, b'\x00'), fileName.encode().ljust(256, b'\x00')]),status_dict)
         return client.RC.ERROR
 
     @staticmethod
@@ -158,7 +158,7 @@ class client :
             '3' : 'LIST_USERS FAIL'
         }
     
-        client.tratar_mensaje(b''.join([b'6', client.user]),status_dict)
+        client.tratar_mensaje(b''.join([b'6', client._user.encode().ljust(256, b'\x00')]),status_dict)
         return client.RC.ERROR
 
     @staticmethod
@@ -172,7 +172,7 @@ class client :
             '4' : 'LIST_CONTENT FAIL'
         }
 
-        client.tratar_mensaje(b''.join([b'7',user.encode()]),status_dict)
+        client.tratar_mensaje(b''.join([b'7',user.encode().ljust(256, b'\x00')]),status_dict)
         return client.RC.ERROR
 
     @staticmethod
@@ -184,7 +184,7 @@ class client :
             '2' : 'GET_FILE FAIL'
         }
 
-        client.tratar_mensaje(b''.join([b'8',user.encode(),remote_FileName.encode(), local_FileName.encode()]),status_dict)
+        client.tratar_mensaje(b''.join([b'8',user.encode().ljust(256, b'\x00'),remote_FileName.encode().ljust(256, b'\x00'), local_FileName.encode().ljust(256, b'\x00')]),status_dict)
         return client.RC.ERROR
 
     # *
