@@ -77,7 +77,10 @@ void *tratar_cliente(void *arg) {
     char status;
     char * string;
     char operacion = buffer[0];
+    char datetime[20];
     strncpy(user, buffer + 1, 256);
+    strncpy(datetime, buffer + 257, 19);
+    printf("%s\n", datetime);
 
     switch (operacion) {
         case '0':

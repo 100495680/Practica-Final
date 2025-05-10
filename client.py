@@ -5,6 +5,7 @@ import socket
 import sys
 import time
 import struct
+import requests
 
 
 
@@ -72,6 +73,13 @@ class client :
         La intención de esta función es unificar el mandado de mensajes como primer argumento siempre se mandará el usuario aún siendo erroneo ya que el 
         mirar si el usuario existe o no, no es competencia del cliente pero el tener el usuario que eres si es la competencia.
         '''
+        # Obtener la fecha y hora desde el servicio web
+        datetime_str = client.get_datetime_from_web()
+        
+        if datetime_str:
+            # Agregar la fecha y hora al mensaje
+            message = message + datetime_str.encode('utf-8')
+            
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             server_address = (client._server, client._port)
             sock.connect(server_address)
@@ -206,6 +214,22 @@ class client :
         client.tratar_mensaje(b''.join([b'8',user.encode().ljust(256, b'\x00'),remote_FileName.encode().ljust(256, b'\x00'), local_FileName.encode().ljust(256, b'\x00')]),status_dict)
         return client.RC.ERROR
 
+    @staticmethod
+    def get_datetime_from_web():
+        """
+        Función que consulta el servicio web para obtener la fecha y hora
+        """
+        try:
+            response = requests.get('http://127.0.0.0:8000/datetime')  # Llamada al servicio web
+            if response.status_code == 200:
+                return response.json()['datetime']  # Devuelve la fecha y hora
+            else:
+                print("Error al obtener la fecha y hora.")
+                return None
+        except Exception as e:
+            print(f"Error al hacer la solicitud: {e}")
+            return None
+        
     # *
     # **
     # * @brief Command interpreter for the client. It calls the protocol functions.

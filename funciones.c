@@ -226,7 +226,7 @@ int getfile(char *user, char *remote_FileName, char *local_FileName) {
                 server_addr.sin_family = AF_INET;
                 server_addr.sin_port = htons(puerto);
                 inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
-                connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr))
+                connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
                 
 
                 //inet_pton(AF_INET, lista_usuarios[j].ip, &server_addr.sin_addr);
