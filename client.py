@@ -48,7 +48,9 @@ class client :
         response = sock.recv(1).decode()
         if response == 'm':
             print(status_dict['0'])
-            print(response[1:])
+            size = ord(sock.recv(1))
+            data = sock.recv(size).decode()
+            print(data)
         else:
             print(status_dict[response[0]])
 

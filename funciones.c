@@ -5,7 +5,7 @@ int desconectar (char *user);
 int publish (char * user, char *fileName, char *description);
 int delete (char * user, char *fileName);
 int listusers (char *user, char ** string);
-int listcontent (char *user, char * string);
+int listcontent (char *user, char ** string);
 int getfile (char *user, char *remote_FileName, char *local_FileName);
 
 #define MAX_BUFFER 2048
@@ -64,11 +64,12 @@ int borrar_usuario(char *user) {
 
 // Las funciones y declaraciones asociadas a las listas dinámicas de los libros de los usuarios
 
-void actualizar_lista_archivos(struct Archivos * lista, int capacidad, struct Archivos archivo ) {
-    capacidad ++;
-    lista = (struct Archivos *)realloc(lista, capacidad * sizeof(struct Archivos));
-    lista[capacidad-1] = archivo;
+void actualizar_lista_archivos(struct Archivos **lista, int *capacidad, struct Archivos archivo) {
+    (*capacidad)++;
+    *lista = realloc(*lista, (*capacidad) * sizeof(struct Archivos));
+    (*lista)[(*capacidad) - 1] = archivo;
 }
+
 
 struct Archivos * buscar_archivo(struct Archivos * lista, int capacidad, char * fileName) {
     for (int i =0; i<capacidad; i++) {
@@ -104,6 +105,10 @@ int borrar_archivo(struct Archivos * lista, int capacidad, char * fileName) {
 int registrar (char * user) {
     struct Usuarios usuario;
     strncpy(usuario.user, user, 256);
+    strncpy(usuario.ip, "",16);
+    usuario.puerto = 0;
+    usuario.cantidad_archivos = 0;
+    usuario.lista_archivos = malloc(usuario.cantidad_archivos);
     struct Usuarios * prueba = buscar_usuario(user);
     if (prueba == NULL) {
         actualizar_lista_usuarios(usuario);
@@ -139,13 +144,14 @@ int desconectar (char * user) {
 int publish (char * user, char * fileName, char * description) {
     struct Usuarios * ptr = buscar_usuario(user);
     if (ptr == NULL) return 1;
-    struct Usuarios usuario = *ptr;
     if (strcmp(ptr->ip, "") == 0) return 2;
-    if (buscar_archivo(usuario.lista_archivos, usuario.cantidad_archivos, fileName) != NULL) return 3;
+    if (buscar_archivo(ptr->lista_archivos, ptr->cantidad_archivos, fileName) != NULL) return 3;
     struct Archivos archivo;
     strncpy(archivo.fileName, fileName, 256);
+    archivo.fileName[255] = '\0';
     strncpy(archivo.description, description, 256);
-    actualizar_lista_archivos(usuario.lista_archivos, usuario.cantidad_archivos, archivo);
+    archivo.description[255] = '\0';
+    actualizar_lista_archivos(&ptr->lista_archivos, &ptr->cantidad_archivos, archivo);
     return 0;
 }
 
@@ -155,8 +161,8 @@ int delete (char * user, char * fileName) {
     struct Usuarios usuario = *ptr;
     printf("%s/%s", ptr->ip, user);
     if (strcmp(ptr->ip, "") == 0) return 2;
-    if (buscar_archivo(usuario.lista_archivos, usuario.cantidad_archivos, fileName) == NULL) return 3;
-    borrar_archivo(usuario.lista_archivos, usuario.cantidad_archivos, fileName);
+    if (buscar_archivo(ptr->lista_archivos, ptr->cantidad_archivos, fileName) == NULL) return 3;
+    borrar_archivo(ptr->lista_archivos, ptr->cantidad_archivos, fileName);
     return 0;
 }
 
@@ -170,33 +176,33 @@ int listusers(char * user, char ** string) {
     string_size ++;
     *string = malloc(string_size);
     *string[0] = '\0';
-    strcat(*string, "\t");
     char formateo[800];
     for (int i = 0; i < capacidad_usuarios; i++) {
-        sscanf(formateo, "%s\t%s\t%d", lista_usuarios[i].user, lista_usuarios[i].ip, &lista_usuarios[i].puerto);
+        snprintf(formateo, sizeof(formateo), "\t%s\t%s\t%d", lista_usuarios[i].user, lista_usuarios[i].ip, lista_usuarios[i].puerto);
         strcat(*string, formateo);
         if (i < capacidad_usuarios - 1) {
-            strcat(*string, "\n\t"); 
+            strcat(*string, "\n"); 
         }
     }
     return 0;
 }
 
-int listcontent(char * user, char * string) {
+int listcontent(char * user, char ** string) {
     struct Usuarios * ptr = buscar_usuario(user);
     if (ptr == NULL) return 1;
-    struct Usuarios usuario = *ptr;
     if (strcmp(ptr->ip, "") == 0) return 2;
 
-    int capacidad = usuario.cantidad_archivos;
+    int capacidad = ptr->cantidad_archivos;
     int string_size = capacidad * 280; // Son 256 del usuario y algo más para los separadores
     string_size ++;
-    string = malloc(string_size);
-    strcat(string, "\t");
+    *string = malloc(string_size);
+    *string[0] = '\0';
+    strcat(*string, "\t");
     for (int i = 0; i < capacidad; i++) {
-        strcat(string, usuario.lista_archivos[i].fileName);
+        strcat(*string, ptr->lista_archivos[i].fileName);
+        strcat(*string, "\n"); 
         if (i < capacidad - 1) {
-            strcat(string, "\n\t"); 
+            strcat(*string, "\t"); 
         }
     }
     return 0;
@@ -210,7 +216,7 @@ int getfile(char *user, char *remote_FileName, char *local_FileName) {
 
     for (int j; j<capacidad_usuarios; j++) {
         struct Usuarios usuario = lista_usuarios[j];
-        int capacidad = usuario.cantidad_archivos;
+        int capacidad = ptr->cantidad_archivos;
         for (int i; i<capacidad; i++) {
             if (strcmp(lista_usuarios[j].lista_archivos[i].fileName, remote_FileName) == 0 ) {
             

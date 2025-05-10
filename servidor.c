@@ -14,6 +14,7 @@
 struct argumentos { // Nesetamos mandar el sd y la ip, puerto del cliente
         int sd;
         struct sockaddr_in addr;
+        int puerto;
 };
 
 // Funciones tipo de mandado y recepción de mensajes
@@ -61,7 +62,7 @@ void *tratar_cliente(void *arg) {
     struct sockaddr_in addr = info->addr;
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(addr.sin_addr), ip, INET_ADDRSTRLEN);
-    int puerto = ntohs(addr.sin_port);
+    int puerto = info->puerto;
     free(info); 
 
     char buffer[2048];
@@ -116,17 +117,15 @@ void *tratar_cliente(void *arg) {
             } else {
                 status = '0' + res;
             }
-            printf("%s",string); 
             break;
         case '7':
             printf("OPERACION LIST_CONTENT FROM %s\n", user);
-            res = listcontent(user, string);
+            res = listcontent(user, &string);
             if (res == 0) {
                 status = 'm';
             } else {
                 status = '0' + res;
             }
-            printf("%s",string);
             break;
         case '8':
             strncpy(remote_FileName, buffer + 257, 256);
@@ -144,9 +143,10 @@ void *tratar_cliente(void *arg) {
         char *mensaje = malloc(tamano + 2);
     
         mensaje[0] = status;             // Metemos el status lo primero. Aquí estará m como la flag de more que se utiliza en UDP
-        strcpy(mensaje + 1, string);
+        mensaje[1] = (char)strlen(string);
+        strcpy(mensaje + 2, string);
     
-        sendMessage(sd, mensaje, tamano + 1);
+        sendMessage(sd, mensaje, tamano + 2);
 
         free(string);
         free(mensaje);
@@ -198,6 +198,7 @@ int main(int argc, char *argv[]) {
     while (1) {
         struct argumentos *argumentos;
         argumentos = malloc(sizeof(struct argumentos));
+        argumentos->puerto = puerto;
         argumentos->addr = client_addr;
         client_len = sizeof(client_addr);
         argumentos->sd = accept(server_sd, (struct sockaddr *)&client_addr, &client_len);
