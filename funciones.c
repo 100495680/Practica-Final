@@ -209,53 +209,62 @@ int listcontent(char * user, char ** string) {
 }
 
 int getfile(char *user, char *remote_FileName, char *local_FileName) {
-    printf("Dentro");
-    fflush(stdout);
-    struct Usuarios * ptr = buscar_usuario(user);
+    struct Usuarios *ptr = buscar_usuario(user);
     if (ptr == NULL) return 1;
     if (strcmp(ptr->ip, "") == 0) return 2;
 
-    for (int j = 0; j<capacidad_usuarios; j++) {
+    for (int j = 0; j < capacidad_usuarios; j++) {
         int capacidad = lista_usuarios[j].cantidad_archivos;
-        for (int i = 0; i<capacidad; i++) {
-            if (strcmp(lista_usuarios[j].lista_archivos[i].fileName, remote_FileName) == 0 ) {
-            
+        for (int i = 0; i < capacidad; i++) {
+            if (strcmp(lista_usuarios[j].lista_archivos[i].fileName, remote_FileName) == 0) {
+
                 int puerto = lista_usuarios[j].puerto;
                 struct sockaddr_in server_addr;
                 FILE *fp;
-                printf("Datos Sacados");
-                fflush(stdout);
-                // Nos conectamos al usuario y mandamos la petición
+
+                // Creamos el socket para enviar el archivo
                 int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+                if (sockfd < 0) {
+                    perror("Error al crear el socket");
+                    return 6;
+                }
+
                 memset(&server_addr, 0, sizeof(server_addr));
                 server_addr.sin_family = AF_INET;
                 server_addr.sin_port = htons(puerto);
-                printf("Trying to connect to IP: %s, Port: %d\n", lista_usuarios[j].ip, puerto);
-                fflush(stdout);
 
-                if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-                    perror("Connection failed");
+                if (inet_pton(AF_INET, lista_usuarios[j].ip, &server_addr.sin_addr) <= 0) {
+                    perror("Error al convertir la IP");
                     close(sockfd);
                     return 6;
                 }
 
-                //inet_pton(AF_INET, lista_usuarios[j].ip, &server_addr.sin_addr);
-                //connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
-                send(sockfd, remote_FileName, strlen(remote_FileName), 0);
-                printf("Socket Creado");
-                fflush(stdout);
-                // Creamos el archivo a recibir
-                fp = fopen(local_FileName, "wb");
-                printf("Archivo abierto");
-                fflush(stdout);
-                // Recibimos los datos y los guardamos
-                char buffer[MAX_BUFFER];
-                ssize_t bytes_received;
-                while ((bytes_received = recv(sockfd, buffer, MAX_BUFFER, 0)) > 0) {
-                    fwrite(buffer, 1, bytes_received, fp);
+                // Conectamos con el cliente
+                if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+                    perror("Error al conectar con el cliente");
+                    close(sockfd);
+                    return 6;
                 }
-                printf("Archivo enviado");
-                fflush(stdout);
+
+                // Enviamos el nombre del archivo
+                send(sockfd, remote_FileName, strlen(remote_FileName), 0);
+
+                // Abrimos el archivo para enviarlo
+                fp = fopen(remote_FileName, "rb");
+                if (fp == NULL) {
+                    perror("Error al abrir el archivo");
+                    close(sockfd);
+                    return 6;
+                }
+
+                char buffer[MAX_BUFFER];
+                ssize_t bytes_read;
+                while ((bytes_read = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
+                    send(sockfd, buffer, bytes_read, 0);
+                }
+
+                printf("Archivo enviado correctamente\n");
+
                 fclose(fp);
                 close(sockfd);
                 return 0;

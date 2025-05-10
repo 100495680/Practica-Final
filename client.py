@@ -191,6 +191,26 @@ class client :
         }
 
         client.tratar_mensaje(b''.join([b'8',user.encode().ljust(256, b'\x00'),remote_FileName.encode().ljust(256, b'\x00'), local_FileName.encode().ljust(256, b'\x00')]),status_dict)
+        # Recibir el archivo
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                server_address = (client._server, client._port)
+                sock.connect(server_address)
+
+                # Enviar el nombre del archivo remoto
+                sock.sendall(remote_FileName.encode().ljust(256, b'\x00'))
+
+                # Abrir el archivo local para escribir los datos
+                with open(local_FileName, "wb") as f:
+                    while True:
+                        data = sock.recv(1024)
+                        if not data:
+                            break
+                        f.write(data)
+                    print(f"Archivo {remote_FileName} recibido correctamente")
+        except Exception as e:
+            print(f"Error al recibir el archivo: {str(e)}")
+
         return client.RC.ERROR
 
     # *
