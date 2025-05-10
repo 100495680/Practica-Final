@@ -4,6 +4,7 @@ import argparse
 import socket
 import sys
 import time
+import struct
 
 
 
@@ -30,10 +31,22 @@ class client :
         try:
             while True:
                 client_sock, client_address = server_sock.accept()
-                request = client_sock.recv(256).decode() # Espera recibir la dirección del archivo
+                request = client_sock.recv(256) # Espera recibir la dirección del archivo
+                filename = request.split(b'\x00', 1)[0].decode('utf-8')
+                print(filename)
                 if request:
-                    with open(request, "rb") as f:
+                    with open(filename, "rb") as f:
                         data = f.read()
+                    file_size = len(data)
+            
+                    # Send 4-byte file size (32-bit unsigned integer)
+                    file_size_bytes = struct.pack("!I", file_size)  # '!I' is big-endian unsigned 32-bit integer
+                    client_sock.sendall(file_size_bytes)
+
+                    # Send 4 NULL bytes as delimiter (to separate size and content)
+                    client_sock.sendall(b'\x00\x00\x00\x00')
+
+                    # Send the actual file data
                     client_sock.sendall(data)
         finally:
             server_sock.close()
@@ -191,25 +204,6 @@ class client :
         }
 
         client.tratar_mensaje(b''.join([b'8',user.encode().ljust(256, b'\x00'),remote_FileName.encode().ljust(256, b'\x00'), local_FileName.encode().ljust(256, b'\x00')]),status_dict)
-        # Recibir el archivo
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                server_address = (client._server, client._port)
-                sock.connect(server_address)
-
-                # Enviar el nombre del archivo remoto
-                sock.sendall(remote_FileName.encode().ljust(256, b'\x00'))
-
-                # Abrir el archivo local para escribir los datos
-                with open(local_FileName, "wb") as f:
-                    while True:
-                        data = sock.recv(1024)
-                        if not data:
-                            break
-                        f.write(data)
-        except Exception as e:
-            print(f"Error al recibir el archivo: {str(e)}")
-
         return client.RC.ERROR
 
     # *
