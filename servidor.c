@@ -14,7 +14,6 @@
 struct argumentos { // Nesetamos mandar el sd y la ip, puerto del cliente
         int sd;
         struct sockaddr_in addr;
-        int puerto;
 };
 
 // Funciones tipo de mandado y recepción de mensajes
@@ -62,7 +61,6 @@ void *tratar_cliente(void *arg) {
     struct sockaddr_in addr = info->addr;
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(addr.sin_addr), ip, INET_ADDRSTRLEN);
-    int puerto = info->puerto;
     free(info); 
 
     char buffer[2048];
@@ -91,7 +89,10 @@ void *tratar_cliente(void *arg) {
             status = '0' + unregistrar(user);
             break;
         case '2':
-            printf("OPERACION CONNECT FROM %s\n", user);
+            printf("OPERACION CONNECT FROM %s\n", user); 
+            uint16_t temp;           
+            memcpy(&temp, buffer + 257, 2);
+            int puerto = (int) temp;
             status = '0' + conectar(user, ip, puerto);
             break;
         case '3':
@@ -198,7 +199,6 @@ int main(int argc, char *argv[]) {
     while (1) {
         struct argumentos *argumentos;
         argumentos = malloc(sizeof(struct argumentos));
-        argumentos->puerto = puerto;
         argumentos->addr = client_addr;
         client_len = sizeof(client_addr);
         argumentos->sd = accept(server_sd, (struct sockaddr *)&client_addr, &client_len);

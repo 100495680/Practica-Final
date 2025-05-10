@@ -26,11 +26,8 @@ class client :
     # ******************** METHODS *******************
 
     @staticmethod
-    def escuchar_peticiones():
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_sock: # Usamos el with para que cierre el socket cuando el programa acabe
-            server_sock.bind(("0.0.0.0", 8081))  # Escuchamos a cualquier trafico que nos digan por ello usamos 0.0.0.0
-            server_sock.listen()
-
+    def escuchar_peticiones(server_sock):
+        try:
             while True:
                 client_sock, client_address = server_sock.accept()
                 request = client_sock.recv(256).decode() # Espera recibir la dirección del archivo
@@ -38,6 +35,8 @@ class client :
                     with open(request, "rb") as f:
                         data = f.read()
                     client_sock.sendall(data)
+        finally:
+            server_sock.close()
 
     @staticmethod
     def tratar_respuesta(sock, status_dict):
@@ -103,8 +102,13 @@ class client :
             '3' : 'CONNECT FAIL'
         }
         client._user = user
-        client.tratar_mensaje(b''.join([b'2',user.encode().ljust(256, b'\x00')]),status_dict)
-        client._hilo_escucha = threading.Thread(target=client.escuchar_peticiones)
+        server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server_sock.bind(("0.0.0.0", 0)) # Permitir todo tipo de tráfico y cualquier puerto
+        port = server_sock.getsockname()[1]
+        server_sock.listen()
+        client.tratar_mensaje(b''.join([b'2',user.encode().ljust(256, b'\x00'), port.to_bytes(2, byteorder='big')]),status_dict)
+        client._hilo_escucha = threading.Thread(target=client.escuchar_peticiones, args=(server_sock,))
         client._hilo_escucha.start()
         return client.RC.ERROR
 
