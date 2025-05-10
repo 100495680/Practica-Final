@@ -207,7 +207,6 @@ class client :
                         if not data:
                             break
                         f.write(data)
-                    print(f"Archivo {remote_FileName} recibido correctamente")
         except Exception as e:
             print(f"Error al recibir el archivo: {str(e)}")
 
