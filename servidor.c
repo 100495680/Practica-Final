@@ -92,7 +92,7 @@ void *tratar_cliente(void *arg) {
             printf("OPERACION CONNECT FROM %s\n", user); 
             uint16_t temp;           
             memcpy(&temp, buffer + 257, 2);
-            int puerto = (int) temp;
+            int puerto = ntohs(temp);
             status = '0' + conectar(user, ip, puerto);
             break;
         case '3':
@@ -160,13 +160,13 @@ void *tratar_cliente(void *arg) {
 
 int main(int argc, char *argv[]) {
     
-    if (argc != 2) {
-        fprintf(stderr, "Uso: %s <puerto>\n", argv[0]);
+    if (argc != 3) {
+        fprintf(stderr, "Uso: %s -p <puerto>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
 
-    int puerto = atoi(argv[1]);
+    int puerto = atoi(argv[2]);
     int server_sd, *client_sd;
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len = sizeof(client_addr);
