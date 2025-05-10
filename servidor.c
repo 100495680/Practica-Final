@@ -80,7 +80,7 @@ void *tratar_cliente(void *arg) {
     char datetime[20];
     strncpy(user, buffer + 1, 256);
     strncpy(datetime, buffer + 257, 19);
-    printf("%s\n", datetime);
+    
 
     switch (operacion) {
         case '0':
@@ -140,7 +140,7 @@ void *tratar_cliente(void *arg) {
         default:
             printf("Operación no reconocida: %c\n", operacion);
     }
-    
+    printf("%s\n", datetime);
     
     if (status == 'm') {
         size_t tamano = strlen(string);
