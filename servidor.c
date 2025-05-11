@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <sys/socket.h>
 #include "funciones.c"
+#include "log_rpc.h" 
 
 #define MAX_BUFFER 2048
 
@@ -78,18 +79,31 @@ void *tratar_cliente(void *arg) {
     char * string;
     char operacion = buffer[0];
     char datetime[20];
+    CLIENT *clnt;  // Puntero al RPC
+    struct arg arg_rpc;  // Argumentos RPC
+    arg_rpc.user = malloc(256 * sizeof(char));
+    arg_rpc.operacion = malloc(256 * sizeof(char));
+    arg_rpc.datetime = malloc(256 * sizeof(char));
     strncpy(user, buffer + 1, 256);
     strncpy(datetime, buffer + 257, 19);
-    
+    strncpy(arg_rpc.user, user, 256);
+    strncpy(arg_rpc.datetime, datetime, 256);
+
+    char *LOG_RPC_IP = getenv("LOG_RPC_IP");
+    clnt = clnt_create(LOG_RPC_IP, LOGRPC, LOGRPC_V1, "udp");
 
     switch (operacion) {
         case '0':
             printf("OPERACION REGISTER FROM %s\n", user);
             status = '0' + registrar(user);
+            arg_rpc.operacion = "REGISTER";
+            log_operation_1(&arg_rpc, clnt);
             break;
         case '1':
             printf("OPERACION UNREGISTER FROM %s\n", user);
             status = '0' + unregistrar(user);
+            arg_rpc.operacion = "UNREGISTER";
+            log_operation_1(&arg_rpc, clnt);
             break;
         case '2':
             printf("OPERACION CONNECT FROM %s\n", user); 
@@ -97,21 +111,29 @@ void *tratar_cliente(void *arg) {
             memcpy(&temp, buffer + 257, 2);
             int puerto = ntohs(temp);
             status = '0' + conectar(user, ip, puerto);
+            arg_rpc.operacion = "CONNECT";
+            log_operation_1(&arg_rpc, clnt);
             break;
         case '3':
             printf("OPERACION DISCONNECT FROM %s\n", user);
             status = '0' + desconectar(user);
+            arg_rpc.operacion = "DISCONNECT";
+            log_operation_1(&arg_rpc, clnt);
             break;
         case '4':
             strncpy(fileName, buffer + 257, 256);
             strncpy(description, buffer + 513, 256);
             printf("OPERACION PUBLISH FROM %s\n", user);
             status = '0' + publish(user, fileName, description);
+            sprintf(arg_rpc.operacion, "PUBLISH %s",fileName);
+            log_operation_1(&arg_rpc, clnt);
             break;
         case '5':
             strncpy(fileName, buffer + 257, 256);
             printf("OPERACION DELETE FROM %s\n", user);
             status = '0' + delete(user, fileName);
+            sprintf(arg_rpc.operacion, "DELETE %s",fileName);
+            log_operation_1(&arg_rpc, clnt);
             break;
         case '6':
             printf("OPERACION LIST_USERS FROM %s\n", user);  
@@ -121,6 +143,8 @@ void *tratar_cliente(void *arg) {
             } else {
                 status = '0' + res;
             }
+            arg_rpc.operacion = "LIST_USERS";
+            log_operation_1(&arg_rpc, clnt);
             break;
         case '7':
             printf("OPERACION LIST_CONTENT FROM %s\n", user);
@@ -130,6 +154,8 @@ void *tratar_cliente(void *arg) {
             } else {
                 status = '0' + res;
             }
+            arg_rpc.operacion = "LIST_CONTENT";
+            log_operation_1(&arg_rpc, clnt);
             break;
         case '8':
             strncpy(remote_FileName, buffer + 257, 256);
