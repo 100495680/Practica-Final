@@ -96,7 +96,6 @@ void *tratar_cliente(void *arg) {
     strncpy(user, buffer + 1, 256);
     strncpy(datetime, buffer + 257, 19);
     strncpy(arg_rpc.user, user, 256);
-    strncpy(arg_rpc.datetime, datetime, 256);
 
     char *LOG_RPC_IP = getenv("LOG_RPC_IP");
     clnt = clnt_create(LOG_RPC_IP, LOGRPC, LOGRPC_V1, "udp");
@@ -173,6 +172,7 @@ void *tratar_cliente(void *arg) {
             printf("Operación no reconocida: %c\n", operacion);
     }
     struct argumentos_rpc argumentos_rpc;
+    strncpy(arg_rpc.datetime, datetime, 256); // Tenemos que poner esto abajo por que cambiamos el valor de datetime si hay más argumentos
     
     argumentos_rpc.cliente = clnt;
     argumentos_rpc.argumentos = &arg_rpc;

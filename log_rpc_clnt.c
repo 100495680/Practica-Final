@@ -23,4 +23,3 @@ log_operation_1(arg *argp, CLIENT *clnt)
 	}
 	return ((void *)&clnt_res);
 }
-

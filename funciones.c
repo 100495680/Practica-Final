@@ -159,7 +159,6 @@ int delete (char * user, char * fileName) {
     struct Usuarios * ptr = buscar_usuario(user);
     if (ptr == NULL) return 1;
     struct Usuarios usuario = *ptr;
-    printf("%s/%s", ptr->ip, user);
     if (strcmp(ptr->ip, "") == 0) return 2;
     if (buscar_archivo(ptr->lista_archivos, ptr->cantidad_archivos, fileName) == NULL) return 3;
     borrar_archivo(ptr->lista_archivos, ptr->cantidad_archivos, fileName);
