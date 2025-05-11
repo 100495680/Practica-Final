@@ -9,4 +9,4 @@ program LOGRPC {
     version LOGRPC_V1 {
         void LOG_OPERATION(arg) = 1;
     } = 1;
-} = 0x20000001;
+} = 0x10495680;

@@ -21,7 +21,7 @@ struct arg {
 };
 typedef struct arg arg;
 
-#define LOGRPC 0x20000001
+#define LOGRPC 0x10495680
 #define LOGRPC_V1 1
 
 #if defined(__STDC__) || defined(__cplusplus)
