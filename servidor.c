@@ -17,6 +17,10 @@ struct argumentos { // Nesetamos mandar el sd y la ip, puerto del cliente
         struct sockaddr_in addr;
 };
 
+struct argumentos_rpc {
+    CLIENT * cliente;
+    struct arg * argumentos;
+};
 // Funciones tipo de mandado y recepción de mensajes
 
 int sendMessage(int socket, char * buffer, int len)
@@ -54,6 +58,11 @@ int recvMessage(int socket, char *buffer, int len)
 		return(0);	/* full length has been receive */
 }
 
+void *log_operation_encapsulados(void *data) {
+    struct argumentos_rpc *arg = (struct argumentos_rpc *)data;
+    log_operation_1(arg->argumentos, arg->cliente);
+    return NULL;
+}
 
 void *tratar_cliente(void *arg) {
     // Pasamos como argumentos el sd, ip y puerto
@@ -97,43 +106,40 @@ void *tratar_cliente(void *arg) {
             printf("OPERACION REGISTER FROM %s\n", user);
             status = '0' + registrar(user);
             arg_rpc.operacion = "REGISTER";
-            log_operation_1(&arg_rpc, clnt);
             break;
         case '1':
             printf("OPERACION UNREGISTER FROM %s\n", user);
             status = '0' + unregistrar(user);
             arg_rpc.operacion = "UNREGISTER";
-            log_operation_1(&arg_rpc, clnt);
             break;
         case '2':
             printf("OPERACION CONNECT FROM %s\n", user); 
             uint16_t temp;           
             memcpy(&temp, buffer + 257, 2);
+            strncpy(datetime, buffer + 259, 19);
             int puerto = ntohs(temp);
             status = '0' + conectar(user, ip, puerto);
             arg_rpc.operacion = "CONNECT";
-            log_operation_1(&arg_rpc, clnt);
             break;
         case '3':
             printf("OPERACION DISCONNECT FROM %s\n", user);
             status = '0' + desconectar(user);
             arg_rpc.operacion = "DISCONNECT";
-            log_operation_1(&arg_rpc, clnt);
             break;
         case '4':
             strncpy(fileName, buffer + 257, 256);
             strncpy(description, buffer + 513, 256);
+            strncpy(datetime, buffer + 769, 19);
             printf("OPERACION PUBLISH FROM %s\n", user);
             status = '0' + publish(user, fileName, description);
             sprintf(arg_rpc.operacion, "PUBLISH %s",fileName);
-            log_operation_1(&arg_rpc, clnt);
             break;
         case '5':
             strncpy(fileName, buffer + 257, 256);
+            strncpy(datetime, buffer + 513, 19);
             printf("OPERACION DELETE FROM %s\n", user);
             status = '0' + delete(user, fileName);
             sprintf(arg_rpc.operacion, "DELETE %s",fileName);
-            log_operation_1(&arg_rpc, clnt);
             break;
         case '6':
             printf("OPERACION LIST_USERS FROM %s\n", user);  
@@ -144,7 +150,6 @@ void *tratar_cliente(void *arg) {
                 status = '0' + res;
             }
             arg_rpc.operacion = "LIST_USERS";
-            log_operation_1(&arg_rpc, clnt);
             break;
         case '7':
             printf("OPERACION LIST_CONTENT FROM %s\n", user);
@@ -155,17 +160,26 @@ void *tratar_cliente(void *arg) {
                 status = '0' + res;
             }
             arg_rpc.operacion = "LIST_CONTENT";
-            log_operation_1(&arg_rpc, clnt);
             break;
         case '8':
             strncpy(remote_FileName, buffer + 257, 256);
             strncpy(local_FileName, buffer + 513, 256);
+            strncpy(datetime, buffer + 769, 19);
             printf("OPERACION GET_FILE FROM %s\n", user);
             status = '0' + getfile(user, remote_FileName, local_FileName);
+            arg_rpc.operacion = "GET_FILE";
             break;
         default:
             printf("Operación no reconocida: %c\n", operacion);
     }
+    struct argumentos_rpc argumentos_rpc;
+    
+    argumentos_rpc.cliente = clnt;
+    argumentos_rpc.argumentos = &arg_rpc;
+
+    pthread_t hilo;
+    pthread_create(&hilo, NULL, log_operation_encapsulados, (void *)&argumentos_rpc);
+    pthread_detach(hilo);  // Iba muy lento si lo haciamos en el main
     printf("%s\n", datetime);
     
     if (status == 'm') {
