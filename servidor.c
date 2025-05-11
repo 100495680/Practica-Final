@@ -98,7 +98,7 @@ void *tratar_cliente(void *arg) {
     strncpy(arg_rpc.user, user, 256);
 
     char *LOG_RPC_IP = getenv("LOG_RPC_IP");
-    clnt = clnt_create(LOG_RPC_IP, LOGRPC, LOGRPC_V1, "udp");
+    clnt = clnt_create(LOG_RPC_IP, LOGRPC, LOGRPC_V1, "tcp");
 
     switch (operacion) {
         case '0':
